@@ -1,159 +1,37 @@
-# su26-ai301-contribution
-# Contribution [#]: [Issue Title]
-
-**Contribution Number:** [1 / 2 / 3]  
-**Student:** [Your Name]  
-**Issue:** [GitHub issue link]  
-**Status:** [Phase I / Phase II / Phase III / Phase IV] [In Progress / Complete]
+Here's your updated README:
 
 ---
 
-## Why I Chose This Issue
+**Contribution #1: expand cleardb and clearorders command tests**
 
-[1-2 paragraphs explaining why this issue interests you, how it matches your skills/learning goals, what you hope to learn]
-
----
-
-## Understanding the Issue
-
-### Problem Description
-
-[In your own words, what's broken or missing?]
-
-### Expected Behavior
-
-[What should happen?]
-
-### Current Behavior
-
-[What actually happens?]
-
-### Affected Components
-
-[Which parts of the codebase are involved?]
+**Contribution Number:** 1
+**Student:** Vishnu Dwivedi
+**Issue:** https://github.com/saleor/saleor/issues/14199
+**Status:** Phase I In Progress
 
 ---
 
-## Reproduction Process
+**Why I Chose This Issue**
 
-### Environment Setup
-
-[Notes on setting up your local development environment - challenges you faced, how you solved them]
-
-### Steps to Reproduce
-
-1. [Step 1]
-2. [Step 2]
-3. [Observed result]
-
-### Reproduction Evidence
-
-- **Commit showing reproduction:** [Link to commit in your fork]
-- **Screenshots/logs:** [If applicable]
-- **My findings:** [What you discovered during reproduction]
+I chose this issue because it offers a well-scoped, beginner-friendly entry point into a real-world open source Django project. Writing unit tests for the `cleardb` management command doesn't require deep knowledge of Saleor's business logic — it requires understanding Django's testing patterns and model relations, which I can learn quickly. I'm also drawn to this issue because tests are foundational to software quality, and contributing tests that protect against regressions is genuinely useful work rather than busywork. The maintainer recently refreshed the issue with a contribution guide, which signals it's still actively wanted.
 
 ---
 
-## Solution Approach
+**Understanding the Issue**
 
-### Analysis
+**Problem Description**
 
-[Your analysis of the root cause - what's causing the issue?]
+The `cleardb` and `clearorders` management commands in Saleor lack sufficient unit test coverage. Saleor has many models with protected foreign key relationships, and when those relationships change, the commands can silently break. Without comprehensive tests, developers may miss these failures during model refactors.
 
-### Proposed Solution
+**Expected Behavior**
 
-[High-level description of your fix approach]
+The `cleardb` and `clearorders` commands should have unit tests covering key scenarios — including protected foreign key relationships — so that model relation changes are caught before they cause runtime errors.
 
-### Implementation Plan
+**Current Behavior**
 
-Using UMPIRE framework (adapted):
-
-**Understand:** [Restate the problem]
-
-**Match:** [What similar patterns/solutions exist in the codebase?]
-
-**Plan:** [Step-by-step implementation plan]
-1. [Modify file X to do Y]
-2. [Add function Z]
-3. [Update tests]
-
-**Implement:** [Link to your branch/commits as you work]
-
-**Review:** [Self-review checklist - does it follow the project's contribution guidelines?]
-
-**Evaluate:** [How will you verify it works?]
+The commands exist and function, but test coverage is sparse, leaving edge cases and relation-dependent failure modes untested.
 
 ---
 
-## Testing Strategy
-
-### Unit Tests
-
-- [ ] Test case 1: [Description]
-- [ ] Test case 2: [Description]
-- [ ] Test case 3: [Description]
-
-### Integration Tests
-
-- [ ] Integration scenario 1
-- [ ] Integration scenario 2
-
-### Manual Testing
-
-[What you tested manually and results]
 
 ---
-
-## Implementation Notes
-
-### Week [X] Progress
-
-[What you built this week, challenges faced, decisions made]
-
-### Week [Y] Progress
-
-[Continue documenting as you work]
-
-### Code Changes
-
-- **Files modified:** [List]
-- **Key commits:** [Links to important commits]
-- **Approach decisions:** [Why you chose certain approaches]
-
----
-
-## Pull Request
-
-**PR Link:** [GitHub PR URL when submitted]
-
-**PR Description:** [Draft or final PR description - much of the content above can be adapted]
-
-**Maintainer Feedback:**
-- [Date]: [Summary of feedback received]
-- [Date]: [How you addressed it]
-
-**Status:** [Awaiting review / Iterating / Approved / Merged]
-
----
-
-## Learnings & Reflections
-
-### Technical Skills Gained
-
-[What you learned technically]
-
-### Challenges Overcome
-
-[What was hard and how you solved it]
-
-### What I'd Do Differently Next Time
-
-[Reflection on your process]
-
----
-
-## Resources Used
-
-- [Link to helpful documentation]
-- [Tutorial or Stack Overflow post that helped]
-- [GitHub issues or discussions that helped]
