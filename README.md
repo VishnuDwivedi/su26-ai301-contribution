@@ -1,9 +1,12 @@
+
+
+```markdown
 # Contribution #1: expand cleardb and clearorders command tests
 
 **Contribution Number:** 1
 **Student:** Vishnu Dwivedi
 **Issue:** https://github.com/saleor/saleor/issues/14199
-**Status:** Phase II In Progress
+**Status:** Phase III Complete
 
 ---
 
@@ -25,13 +28,14 @@ The `cleardb` and `clearorders` commands should have unit tests covering key sce
 
 ### Current Behavior
 
-The commands exist and function, but test coverage is sparse, leaving edge cases and relation-dependent failure modes untested.
+The commands existed and functioned, but had zero test coverage, leaving edge cases and relation-dependent failure modes completely untested.
 
 ### Affected Components
 
-- `saleor/management/commands/cleardb.py`
-- `saleor/management/commands/clearorders.py`
-- Corresponding test files under `saleor/management/tests/`
+- `saleor/core/management/commands/cleardb.py`
+- `saleor/core/management/commands/clearorders.py`
+- `saleor/core/management/tests/test_cleardb.py` ← created
+- `saleor/core/management/tests/test_clearorders.py` ← created
 
 ---
 
@@ -39,73 +43,108 @@ The commands exist and function, but test coverage is sparse, leaving edge cases
 
 ### Environment Setup
 
-Set up local development environment by forking the `saleor/saleor` repository and creating a working branch `fix-issue-14199` directly on GitHub. Currently in the process of cloning the repository locally and setting up the dev container per the project's CONTRIBUTING.md instructions.
+- Forked `saleor/saleor` and created branch `fix-issue-14199` on GitHub
+- Cloned fork locally on macOS (Apple Silicon)
+- Installed `libmagic` via `brew install libmagic` (required by Saleor's thumbnail module)
+- Started PostgreSQL and Redis via `docker compose up db cache -d` inside `.devcontainer/`
+- Created `.env` file from template
+- Installed dependencies with `uv sync`
+- Ran tests with `uv run poe test saleor/core/management/tests/ -n0`
 
 ### Steps to Reproduce
 
-This is a test coverage issue rather than a runtime bug. "Reproducing" means identifying the gap:
+This is a test coverage issue rather than a runtime bug. "Reproducing" means confirming the gap:
 
-1. Navigate to `saleor/management/commands/cleardb.py` in the codebase
-2. Run existing tests with `uv run poe test saleor/management/`
-3. Observe that protected foreign key relationship scenarios are not covered
-4. Reference PR [#14198](https://github.com/saleor/saleor/pull/14198) (linked by maintainer) for examples of the kind of failures that lack test coverage
+1. Navigate to `saleor/core/management/commands/cleardb.py`
+2. Search for a corresponding test file — none exists
+3. Run `uv run poe test saleor/core/management/` — no tests collected
+4. Confirm zero coverage for both `cleardb` and `clearorders` commands
 
 ### Reproduction Evidence
 
 - **Branch:** https://github.com/VishnuDwivedi/saleor/tree/fix-issue-14199
-- **My findings:** Test coverage gap confirmed by reviewing existing test files and comparing against the model relations present in the codebase
+- **Finding:** No test directory existed at `saleor/core/management/tests/` — confirmed zero prior coverage
 
 ---
 
 ## Solution Approach
 
+### Analysis
+
+The test settings run with `DEBUG=False`, so every `cleardb` call requires either `force=True` or `settings.DEBUG = True` to be set in the test. This was the key insight needed to make the tests pass.
+
+### Proposed Solution
+
+Created two new test files covering the main scenarios for both commands.
+
 ### Implementation Plan (UMPIRE)
 
-**Understand:**
-The `cleardb` command lacks unit tests for model relation scenarios, particularly protected foreign keys, which can cause silent failures when Saleor model relations change during refactors.
+**Understand:** Both commands had zero test coverage. The `cleardb` command has a DEBUG guard that required special handling in tests.
 
-**Match:**
-PR [#14198](https://github.com/saleor/saleor/pull/14198) linked by the maintainer shows the exact pattern expected for these tests. Saleor uses `pytest` with a given/when/then structure per CONTRIBUTING.md.
+**Match:** Used Saleor's existing `given/when/then` pattern from other test files. Used existing fixtures (`order`, `checkout`, `customer_user`, `staff_user`, `superuser`, `shipping_zone`) already defined in Saleor's `conftest.py`.
 
 **Plan:**
-1. Clone the repo locally and set up the dev container
-2. Run `uv run poe test saleor/management/` to see existing coverage
-3. Review `cleardb.py` and `clearorders.py` to identify all model relations
-4. Identify which protected FK relationships are not yet tested
-5. Add new pytest test cases following the given/when/then pattern
-6. Run the full test suite to confirm no regressions
+1. Create `saleor/core/management/tests/__init__.py`
+2. Create `test_cleardb.py` with 8 test cases
+3. Create `test_clearorders.py` with 4 test cases
+4. Fix `DEBUG=False` issue by passing `settings` fixture and setting `settings.DEBUG = True`
+5. Run full test suite to confirm all pass
 
-**Implement:**
-Branch: https://github.com/VishnuDwivedi/saleor/tree/fix-issue-14199 — implementation in progress
+**Implement:** https://github.com/VishnuDwivedi/saleor/tree/fix-issue-14199
 
-**Review:**
-Will follow Saleor's given/when/then test pattern and commit message conventions per CONTRIBUTING.md before opening a PR.
+**Review:** Followed Saleor's `given/when/then` pattern, used relative imports, followed commit message conventions.
 
-**Evaluate:**
-New tests should pass and cover previously untested protected FK scenarios. All existing tests should continue to pass.
+**Evaluate:** All 12 tests pass with 0 failures.
 
 ---
 
 ## Testing Strategy
 
-### Unit Tests
+### Unit Tests Added
 
-- Test case 1: `cleardb` runs successfully when all model relations are intact
-- Test case 2: `cleardb` handles protected foreign key relationships without errors
-- Test case 3: `clearorders` runs successfully under normal conditions
-- Test case 4: Edge cases where related objects exist and could block deletion
+**test_cleardb.py (8 tests):**
+- `test_cleardb_raises_error_when_not_in_debug_mode` — confirms DEBUG guard works
+- `test_cleardb_runs_in_debug_false_with_force_flag` — confirms `--force` bypasses guard
+- `test_cleardb_removes_orders` — confirms orders are deleted
+- `test_cleardb_removes_checkouts` — confirms checkouts are deleted
+- `test_cleardb_removes_products_and_categories` — confirms catalog is cleared
+- `test_cleardb_removes_customers_but_preserves_staff` — confirms staff accounts survive
+- `test_cleardb_delete_staff_flag_removes_staff_but_preserves_superuser` — confirms superuser survives
+- `test_cleardb_removes_shipping_zones` — confirms shipping data is cleared
 
-### Manual Testing
+**test_clearorders.py (4 tests):**
+- `test_clearorders_removes_orders` — confirms orders are deleted
+- `test_clearorders_removes_checkouts` — confirms checkouts are deleted
+- `test_clearorders_preserves_customers_by_default` — confirms customers survive by default
+- `test_clearorders_delete_customers_flag_removes_customers` — confirms `--delete-customers` works
 
-Run `uv run poe test saleor/management/` before and after changes to confirm new tests pass and no regressions are introduced.
+### Test Results
+
+```
+12 passed, 1 warning in 1.11s
+```
 
 ---
 
 ## Implementation Notes
 
 ### Week 1 Progress
+Selected issue, set up fork, created working branch, reviewed CONTRIBUTING.md.
 
-Selected issue, set up fork, created working branch `fix-issue-14199` on GitHub. Reviewed CONTRIBUTING.md and identified setup path via dev container. Phase II submission in progress — local environment setup and test implementation to follow.
+### Week 2 Progress
+- Set up local environment on macOS with Docker, libmagic, uv
+- Discovered no test directory existed — created from scratch
+- Wrote 12 tests across 2 files
+- Fixed `DEBUG=False` issue by using `settings` fixture
+- All 12 tests passing
+
+### Files Modified
+- `saleor/core/management/tests/__init__.py` ← new
+- `saleor/core/management/tests/test_cleardb.py` ← new
+- `saleor/core/management/tests/test_clearorders.py` ← new
+
+### Key Commits
+- `TST add tests for cleardb and clearorders commands`
 
 ---
 
@@ -117,12 +156,17 @@ PR Link: *(to be added in Phase IV)*
 
 ## Learnings & Reflections
 
-*(To be filled in after PR submission)*
+### Technical Skills Gained
+- Django management command testing patterns
+- Using pytest `settings` fixture to override Django settings in tests
+- Setting up a complex Django project locally with Docker dependencies
 
----
+### Challenges Overcome
+- Docker Desktop had a corrupted metadata database — fixed by restarting
+- `libmagic` system dependency was missing — fixed with `brew install libmagic`
+- Tests were failing with `DEBUG=False` — fixed by adding `settings.DEBUG = True` in each test
 
-## Resources Used
-
+### Resources Used
 - [Saleor CONTRIBUTING.md](https://github.com/saleor/saleor/blob/main/CONTRIBUTING.md)
 - [Reference PR #14198](https://github.com/saleor/saleor/pull/14198)
 - [Issue #14199](https://github.com/saleor/saleor/issues/14199)
