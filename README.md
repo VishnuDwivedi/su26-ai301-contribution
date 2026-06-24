@@ -128,4 +128,3 @@ PR Link: *(to be added in Phase IV)*
 - [Issue #14199](https://github.com/saleor/saleor/issues/14199)
 ```
 
-Copy this entire block into your `README.md` on GitHub, commit it, and submit. Good luck!
