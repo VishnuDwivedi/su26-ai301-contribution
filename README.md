@@ -171,4 +171,21 @@ PR Link: *(to be added in Phase IV)*
 - [Reference PR #14198](https://github.com/saleor/saleor/pull/14198)
 - [Issue #14199](https://github.com/saleor/saleor/issues/14199)
 ```
+###phase4
+## Maintainer Feedback
+
+**Status:** Iterating
+
+The maintainer reviewed the pull request and requested changes. They noted that although the PR increases test coverage for the `cleardb` and `clearorders` commands, the current tests do not yet cover the protected foreign key scenarios described in Issue #14199.
+
+Specifically, the maintainer suggested extending the contribution to test more complex cases where protected foreign key relationships can cause these commands to fail. They referenced the `TransactionItem` failure scenario from Issue #14197 as an example of the type of regression this issue is meant to catch.
+
+## Next Steps
+
+1. Investigate the failure scenario described in Issue #14197.
+2. Identify Saleor models with protected foreign key relationships affected by `cleardb` or `clearorders`.
+3. Add test cases that reproduce protected foreign key command failures.
+4. Update the implementation if needed so the commands handle those cases correctly.
+5. Re-run the test suite.
+6. Push follow-up commits and re-request maintainer review.
 
