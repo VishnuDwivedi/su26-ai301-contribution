@@ -1,12 +1,10 @@
-
-
-```markdown
 # Contribution #1: expand cleardb and clearorders command tests
 
 **Contribution Number:** 1
 **Student:** Vishnu Dwivedi
 **Issue:** https://github.com/saleor/saleor/issues/14199
-**Status:** Phase III Complete
+**Pull Request:** https://github.com/saleor/saleor/pull/19364
+**Status:** Phase IV In Progress — Addressing Maintainer Review Feedback
 
 ---
 
@@ -100,7 +98,7 @@ Created two new test files covering the main scenarios for both commands.
 
 ## Testing Strategy
 
-### Unit Tests Added
+### Unit Tests Added (Initial Submission)
 
 **test_cleardb.py (8 tests):**
 - `test_cleardb_raises_error_when_not_in_debug_mode` — confirms DEBUG guard works
@@ -118,74 +116,36 @@ Created two new test files covering the main scenarios for both commands.
 - `test_clearorders_preserves_customers_by_default` — confirms customers survive by default
 - `test_clearorders_delete_customers_flag_removes_customers` — confirms `--delete-customers` works
 
-### Test Results
+### Test Results (Initial Submission)
 
-```
-12 passed, 1 warning in 1.11s
-```
+All 12 tests passed, 0 failures.
 
 ---
 
-## Implementation Notes
+## Week 5 Update — Pull Request Review Feedback
 
-### Week 1 Progress
-Selected issue, set up fork, created working branch, reviewed CONTRIBUTING.md.
+### PR Status
 
-### Week 2 Progress
-- Set up local environment on macOS with Docker, libmagic, uv
-- Discovered no test directory existed — created from scratch
-- Wrote 12 tests across 2 files
-- Fixed `DEBUG=False` issue by using `settings` fixture
-- All 12 tests passing
+Opened [PR #19364](https://github.com/saleor/saleor/pull/19364) two weeks ago. Reviewer **wcislo-saleor** (Saleor team member) requested changes, and the PR was subsequently closed by the reviewer (branch `fix-issue-14199` still has unmerged commits, so it can be reopened once revised).
 
-### Files Modified
-- `saleor/core/management/tests/__init__.py` ← new
-- `saleor/core/management/tests/test_cleardb.py` ← new
-- `saleor/core/management/tests/test_clearorders.py` ← new
+### Reviewer Feedback (Summary)
 
-### Key Commits
-- `TST add tests for cleardb and clearorders commands`
+The reviewer's core point: issue #14199 specifically calls out **protected foreign key relationships** as the failure mode to guard against, and referenced [PR #14198](https://github.com/saleor/saleor/pull/14198) as an example. My initial 12 tests cover normal deletion/preservation behavior (orders, checkouts, staff, customers, shipping zones) but don't exercise any model with a `PROTECT`-type foreign key relationship — so they don't actually test the scenario the issue was opened for.
 
----
+### Root Cause I Identified
 
-## Pull Request
+Looking at the linked example, `TransactionItem` has a protected foreign key back to `Order`/`Checkout`. Before [PR #14198](https://github.com/saleor/saleor/pull/14198), running `cleardb` with a transaction item attached to an order would raise a `ProtectedError`, since Django refuses to delete a row that's still protected-referenced. That PR fixed the bug by deleting transaction items before the orders/checkouts they reference. My test suite doesn't include a test that would catch a regression of that fix — which is exactly the gap the reviewer flagged.
 
-PR Link: *(to be added in Phase IV)*
+The reviewer also raised a broader point: even with a `TransactionItem`-specific test added, the suite still isn't future-proof against *new* protected relations being added later without a corresponding test. I'm treating that as a valid but separate, larger-scope concern — noting it in my response rather than trying to solve it generically in this contribution.
 
----
+### Plan to Address Feedback
 
-## Learnings & Reflections
+1. Add test case(s) that create a `TransactionItem` linked to an order (and/or checkout), then run `cleardb`/`clearorders` and assert the command completes without raising `ProtectedError` and correctly clears the data.
+2. Audit `saleor/core/management/commands/cleardb.py` and `clearorders.py` for other models with `on_delete=PROTECT` relations pointing at cleared models, to check whether additional scenarios beyond `TransactionItem` need coverage.
+3. Push the new tests to the `fix-issue-14199` branch.
+4. Reply to wcislo-saleor's review comment acknowledging the specific gap, summarizing the added tests, and noting the future-proofing point as an acknowledged limitation outside this contribution's scope.
+5. Reopen PR #19364 (or open a follow-up PR referencing it) once the new commits are pushed, and re-request review.
 
-### Technical Skills Gained
-- Django management command testing patterns
-- Using pytest `settings` fixture to override Django settings in tests
-- Setting up a complex Django project locally with Docker dependencies
+### Status as of Week 5
 
-### Challenges Overcome
-- Docker Desktop had a corrupted metadata database — fixed by restarting
-- `libmagic` system dependency was missing — fixed with `brew install libmagic`
-- Tests were failing with `DEBUG=False` — fixed by adding `settings.DEBUG = True` in each test
-
-### Resources Used
-- [Saleor CONTRIBUTING.md](https://github.com/saleor/saleor/blob/main/CONTRIBUTING.md)
-- [Reference PR #14198](https://github.com/saleor/saleor/pull/14198)
-- [Issue #14199](https://github.com/saleor/saleor/issues/14199)
-```
-###phase4
-## Maintainer Feedback
-
-**Status:** Iterating
-
-The maintainer reviewed the pull request and requested changes. They noted that although the PR increases test coverage for the `cleardb` and `clearorders` commands, the current tests do not yet cover the protected foreign key scenarios described in Issue #14199.
-
-Specifically, the maintainer suggested extending the contribution to test more complex cases where protected foreign key relationships can cause these commands to fail. They referenced the `TransactionItem` failure scenario from Issue #14197 as an example of the type of regression this issue is meant to catch.
-
-## Next Steps
-
-1. Investigate the failure scenario described in Issue #14197.
-2. Identify Saleor models with protected foreign key relationships affected by `cleardb` or `clearorders`.
-3. Add test cases that reproduce protected foreign key command failures.
-4. Update the implementation if needed so the commands handle those cases correctly.
-5. Re-run the test suite.
-6. Push follow-up commits and re-request maintainer review.
-
+Issue #14199 remains open and unassigned on Saleor's tracker — no one else has picked it up, so I'm continuing this contribution rather than starting a new one. Currently mid-Phase IV: responding to maintainer feedback and preparing revised commits before requesting re-review.
