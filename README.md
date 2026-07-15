@@ -143,9 +143,12 @@ The reviewer also raised a broader point: even with a `TransactionItem`-specific
 1. Add test case(s) that create a `TransactionItem` linked to an order (and/or checkout), then run `cleardb`/`clearorders` and assert the command completes without raising `ProtectedError` and correctly clears the data.
 2. Audit `saleor/core/management/commands/cleardb.py` and `clearorders.py` for other models with `on_delete=PROTECT` relations pointing at cleared models, to check whether additional scenarios beyond `TransactionItem` need coverage.
 3. Push the new tests to the `fix-issue-14199` branch.
-4. Reply to wcislo-saleor's review comment acknowledging the specific gap, summarizing the added tests, and noting the future-proofing point as an acknowledged limitation outside this contribution's scope.
+4. Reply to wcislo-saleor's review comment, acknowledging the specific gap, summarizing the added tests, and noting the future-proofing point as an acknowledged limitation outside this contribution's scope.
 5. Reopen PR #19364 (or open a follow-up PR referencing it) once the new commits are pushed, and re-request review.
 
 ### Status as of Week 5
 
 Issue #14199 remains open and unassigned on Saleor's tracker — no one else has picked it up, so I'm continuing this contribution rather than starting a new one. Currently mid-Phase IV: responding to maintainer feedback and preparing revised commits before requesting re-review.
+
+### Status of WEEK 6 
+I have been working on suggested changes and checking them in my environment. Almost close to finishing it.
